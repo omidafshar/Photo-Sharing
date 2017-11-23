@@ -1,4 +1,4 @@
-# Lab 5 : AVFoundation #
+# Snapchat Clone #
 
 ![](/README-images/camera-preview.gif)
 
