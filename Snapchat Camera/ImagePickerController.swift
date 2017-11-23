@@ -10,7 +10,7 @@ import UIKit
 import AVFoundation
 
 // TODO: you'll need to edit this line to make your class conform to a protocol
-class ImagePickerViewController: UIViewController {
+class ImagePickerViewController: UIViewController, AVCapturePhotoCaptureDelegate {
     
     // Part 1 involves connecting these outlets
     @IBOutlet weak var imageViewOverlay: UIImageView!
@@ -44,10 +44,11 @@ class ImagePickerViewController: UIViewController {
         
         // TODO: instantiate `captureSession` here (no need to pass in any
         // parameters into their initializers
+        captureSession = AVCaptureSession()
         
         // TODO: uncomment me when the README tells you to!
-        // createAndLayoutPreviewLayer(fromSession: captureSession)
-        // configureCaptureSession(forDevicePosition: .unspecified)
+        createAndLayoutPreviewLayer(fromSession: captureSession)
+        configureCaptureSession(forDevicePosition: .unspecified)
         
         captureSession?.startRunning()
         
@@ -58,7 +59,7 @@ class ImagePickerViewController: UIViewController {
         // hide the navigation bar while we are in this view
         navigationController?.navigationBar.isHidden = true
     }
-
+    
     
     /// Should configure `captureSession` with an input and output (you'll need to implement this!)
     ///
@@ -74,11 +75,16 @@ class ImagePickerViewController: UIViewController {
         
         // This line will need to be edited for part 5.
         // It has a bad name (and is poorly written syntactically) because we want
-        // you to think about what it's type should be. 
+        // you to think about what it's type should be.
         let someConstantWithABadName = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInWideAngleCamera], mediaType: .video, position: devicePostion).devices[1]
-    
+        
         do {
             // TODO: add an input and output to our AVCaptureSession
+            captureDevice = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInWideAngleCamera], mediaType: .video, position: devicePostion).devices[0]
+            let input = try AVCaptureDeviceInput(device: captureDevice!)
+            captureSession.addInput(input)
+            photoOutput = AVCapturePhotoOutput()
+            captureSession.addOutput(photoOutput!)
         }
         catch {
             print(error.localizedDescription)
@@ -91,12 +97,13 @@ class ImagePickerViewController: UIViewController {
     /// - Parameter session: the current captureSession
     func createAndLayoutPreviewLayer(fromSession session: AVCaptureSession?) {
         // TODO: initialize previewLayer
-    
+        previewLayer = AVCaptureVideoPreviewLayer(session: captureSession!)
+        
         guard let previewLayer = previewLayer else {
             print("previewLayer hasn't been initialized yet!")
             return
         }
-    
+        
         // these two lines add the previewlayer to our viewcontroller's view programattically
         view.layer.addSublayer(previewLayer)
         previewLayer.frame = view.layer.frame
@@ -108,12 +115,13 @@ class ImagePickerViewController: UIViewController {
         // to start the process of creating a photo from our photoOutput
         
         // TODO: delete this line
-        selectedImage = UIImage(named: "squirrel") ?? UIImage()
+        // selectedImage = UIImage(named: "squirrel") ?? UIImage()
         
         let photoSettings = AVCapturePhotoSettings(format: [AVVideoCodecKey : AVVideoCodecType.jpeg])
         
         // TODO: capture the photo using photoOutput
-       
+        photoOutput?.capturePhoto(with: photoSettings, delegate: self)
+        
         toggleUI(isInPreviewMode: true)
     }
     
@@ -133,6 +141,12 @@ class ImagePickerViewController: UIViewController {
     
     @IBAction func sendButtonWasPressed(_ sender: UIButton) {
         performSegue(withIdentifier: "imagePickerToChooseThread", sender: nil)
+    }
+    
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
+        let data = photo.fileDataRepresentation()
+        selectedImage = UIImage(data: data!)!
+        toggleUI(isInPreviewMode: true)
     }
     
     // MARK: Do not edit below this line
@@ -171,4 +185,3 @@ class ImagePickerViewController: UIViewController {
         toggleUI(isInPreviewMode: false)
     }
 }
-
