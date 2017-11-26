@@ -1,4 +1,4 @@
-# Snapchat Clone #
+# Photo Share #
 
 ![](/README-images/camera-preview.gif)
 
